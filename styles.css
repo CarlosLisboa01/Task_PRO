@@ -1421,7 +1421,7 @@ body {
 .delete-comment-btn {
     background: none;
     border: none;
-    color: var(--text-secondary, #64748b);
+    color: var(--status-late) !important;
     cursor: pointer;
     font-size: 0.9rem;
     padding: 2px 4px;
@@ -1430,8 +1430,12 @@ body {
 }
 
 .delete-comment-btn:hover {
-    color: #ef4444;
+    color: #ef4444 !important;
     background-color: rgba(239, 68, 68, 0.1);
+}
+
+.delete-comment-btn i {
+    color: #ef4444 !important;
 }
 
 .comment-form {
@@ -2873,7 +2877,7 @@ body {
 }
 
 .status-cell {
-    width: 150px;
+    width: 180px;
 }
 
 .status-select {
@@ -2888,6 +2892,7 @@ body {
     font-weight: 500;
     font-size: 14px;
     text-align: center;
+    min-width: 150px;
 }
 
 .status-select:focus {
@@ -2922,8 +2927,12 @@ body {
 
 .actions-cell {
     width: 200px;
-    text-align: right;
+    text-align: center;
     white-space: nowrap;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
 }
 
 .actions-cell button {
@@ -2938,9 +2947,17 @@ body {
     color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition-normal);
-    margin-left: 6px;
+    margin: 0;
     position: relative;
     overflow: hidden;
+}
+
+.delete-button {
+    color: var(--status-late) !important;
+}
+
+.delete-button i {
+    color: var(--status-late) !important;
 }
 
 .actions-cell button:hover {
@@ -2983,6 +3000,7 @@ body {
 
 .delete-button:hover {
     color: var(--status-late) !important;
+    background-color: rgba(239, 68, 68, 0.1) !important;
 }
 
 /* Comentários e contadores */
@@ -3078,6 +3096,20 @@ body {
     
     .actions-cell {
         width: auto;
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .status-cell {
+        width: 160px;
+        min-width: 160px;
+    }
+    
+    .status-select {
+        min-width: 140px;
+        font-size: 13px;
+        padding: 8px 10px;
     }
 }
 
@@ -4293,5 +4325,30 @@ body.sidebar-open {
         background-color: transparent;
         color: var(--primary-color);
         box-shadow: none;
+    }
+}
+
+.task-row td.actions-cell {
+    padding: 10px 20px;
+    text-align: center;
+    vertical-align: middle;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .actions-cell {
+        width: auto;
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+    }
+    
+    .actions-cell button {
+        width: 32px;
+        height: 32px;
+        margin: 0;
     }
 }

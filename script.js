@@ -870,7 +870,7 @@ function createTaskRow(task) {
     // Botão de excluir
     const deleteButton = document.createElement('button');
     deleteButton.className = 'delete-button';
-    deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+    deleteButton.innerHTML = '<i class="fas fa-trash-alt" style="color: #ef4444;"></i>';
     deleteButton.title = 'Excluir tarefa';
     
     // Adicionar botões à célula de ações
@@ -1443,7 +1443,7 @@ function createCommentElement(comment) {
     
     const deleteButton = document.createElement('button');
     deleteButton.className = 'delete-comment-btn';
-    deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+    deleteButton.innerHTML = '<i class="fas fa-trash-alt" style="color: #ef4444;"></i>';
     deleteButton.title = 'Excluir comentário';
     
     // Evento para excluir comentário
@@ -2202,7 +2202,7 @@ function createTaskRow(task) {
                 <i class="fas fa-thumbtack ${task.pinned ? 'pinned' : ''}"></i>
             </button>
             <button class="delete-button" title="Excluir Tarefa">
-                <i class="fas fa-trash-alt"></i>
+                <i class="fas fa-trash-alt" style="color: #ef4444;"></i>
             </button>
         </td>
     `;
