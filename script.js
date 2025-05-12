@@ -553,6 +553,14 @@ async function updateTasksStatus() {
             updateAnalytics();
         }
         
+        // Atualizar os KPIs
+        if (typeof window.updateKPIDashboard === 'function') {
+            console.log('Atualizando KPIs após mudança automática de status');
+            window.updateKPIDashboard().catch(err => {
+                console.error('Erro ao atualizar KPIs:', err);
+            });
+        }
+        
         // Atualizar o calendário
         if (typeof loadCalendarTasks === 'function') {
             console.log('Atualizando calendário após mudança automática de status');
@@ -694,7 +702,7 @@ function renderTasks() {
     filteredTasks.sort((a, b) => {
         if (a.pinned && !b.pinned) return -1;
         if (!a.pinned && b.pinned) return 1;
-        return 0;
+    return 0;
     });
     
     // Obter o elemento da tabela
@@ -776,6 +784,13 @@ function renderTasks() {
         // Adicionar a linha à tabela
         tableBody.appendChild(row);
     });
+    
+    // Atualizar KPIs se a função estiver disponível
+    if (typeof window.updateKPIDashboard === 'function') {
+        window.updateKPIDashboard().catch(err => {
+            console.error('Erro ao atualizar KPIs:', err);
+        });
+    }
 }
 
 // Função para criar linha da tarefa na tabela
