@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="msapplication-TileColor" content="#7c3aed">
+    <meta name="msapplication-config" content="none">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="description" content="Sistema de gerenciamento de tarefas Task Manager Pro, compatível com todos navegadores">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="TaskPRO">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="TaskPRO">
+    <meta name="apple-mobile-web-app-title" content="TaskPRO">
+    <meta name="HandheldFriendly" content="true">
+    
+    <!-- Preload de recursos críticos para melhor desempenho -->
+    <link rel="preload" href="styles.css" as="style">
+    <link rel="preload" href="script.js" as="script">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+    
+    <title>Task Manager Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.5.0/dist/umd/supabase.js"></script>
+    <script>
+        const supabaseJs = supabase;
+    </script>
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Ícone de aplicativo -->
+    <link rel="icon" href="TaskPRO_LOGO.png">
+    <link rel="apple-touch-icon" href="TaskPRO_LOGO.png">
+    
+    <!-- Script de correção de layout rápido -->
+    <script>
+        // Correção imediata de layout
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se há overflow e corrigir
+            setTimeout(function() {
+                const body = document.body;
+                const html = document.documentElement;
+                
+                // Garantir que o conteúdo não seja cortado
+                body.style.minWidth = '320px';
+                body.style.overflowX = 'auto';
+                
+                // Ajustar app container
+                const appContainer = document.querySelector('.app-container');
+                if (appContainer) {
+                    appContainer.style.display = 'flex';
+                    appContainer.style.width = '100%';
+                    if (window.innerWidth <= 768) {
+                        appContainer.style.flexDirection = 'column';
+                    }
+                }
+                
+                // Ajustar main content
+                const mainContent = document.querySelector('.main-content');
+                if (mainContent) {
+                    if (window.innerWidth <= 768) {
+                        mainContent.style.width = '100%';
+                        mainContent.style.marginLeft = '0';
+                    } else {
+                        mainContent.style.width = 'calc(100% - 280px)';
+                    }
+                    mainContent.style.overflowX = 'auto';
+                }
+                
+                // Garantir que tabelas tenham overflow
+                const tableContainers = document.querySelectorAll('.task-table-container');
+                tableContainers.forEach(function(container) {
+                    container.style.overflowX = 'auto';
+                    container.style.maxWidth = '100%';
+                });
+                
+                console.log('Script de correção de layout rápido executado');
+            }, 100);
+        });
+    </script>
+</head>
+<body>
+    <noscript>
+        <div style="text-align: center; padding: 20px; margin: 20px; background-color: #f8f9fa; border-radius: 8px; color: #333;">
+            <h2>JavaScript Necessário</h2>
+            <p>Este aplicativo requer JavaScript para funcionar corretamente. Por favor, habilite o JavaScript no seu navegador para continuar.</p>
+        </div>
+    </noscript>
+    
+    <!-- Botão de menu para mobile -->
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Menu de navegação">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para o menu móvel -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="TaskPRO_LOGO.png" alt="TaskPRO Logo" class="sidebar-logo">
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#calendario">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Calendário</span>
+                </a>
+                <a href="#analises">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Análises</span>
+                </a>
+                <a href="#">
+                    <i class="fas fa-cog"></i>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-search" id="header-search">
+                    <i class="fas fa-search search-icon" id="search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Pesquisar tarefas...">
+                    <button type="button" id="search-button" class="search-button" aria-label="Pesquisar">
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="user-profile">
+                        <img src="https://ui-avatars.com/api/?name=User&background=random" alt="Perfil">
+                        <span>Usuário</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Modal de Formulário de Tarefa (agora fora das visões) -->
+            <div class="task-form-modal" id="task-form-modal" style="display: none;">
+                <form id="task-form" class="task-form">
+                    <div class="form-header">
+                        <h3>Nova Tarefa</h3>
+                        <button type="button" class="close-modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-pencil-alt"></i>
+                                Título da Tarefa
+                            </label>
+                            <input type="text" id="task-input" placeholder="Digite o título da tarefa" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-layer-group"></i>
+                                Categoria
+                            </label>
+                            <select id="task-category" required>
+                                <option value="day">Dia</option>
+                                <option value="week">Semana</option>
+                                <option value="month">Mês</option>
+                                <option value="year">Ano</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-hourglass-start"></i>
+                                    Data de Início
+                                </label>
+                                <input type="datetime-local" id="task-start-date">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-hourglass-end"></i>
+                                    Data Final
+                                </label>
+                                <input type="datetime-local" id="task-end-date">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status</label>
+                            <div class="status-options">
+                                <label class="status-option">
+                                    <input type="radio" name="status" value="all" checked>
+                                    <span class="status-badge all">
+                                        <i class="fas fa-list"></i>
+                                        Todas
+                                    </span>
+                                </label>
+                                <label class="status-option">
+                                    <input type="radio" name="status" value="pending">
+                                    <span class="status-badge pending">
+                                        <i class="fas fa-clock"></i>
+                                        Em andamento
+                                    </span>
+                                </label>
+                                <label class="status-option">
+                                    <input type="radio" name="status" value="completed">
+                                    <span class="status-badge completed">
+                                        <i class="fas fa-check"></i>
+                                        Concluído
+                                    </span>
+                                </label>
+                                <label class="status-option">
+                                    <input type="radio" name="status" value="finished">
+                                    <span class="status-badge finished">
+                                        <i class="fas fa-flag-checkered"></i>
+                                        Finalizado
+                                    </span>
+                                </label>
+                                <label class="status-option">
+                                    <input type="radio" name="status" value="late">
+                                    <span class="status-badge late">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Em atraso
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="button" class="btn-cancel">Cancelar</button>
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Tarefa
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="content-wrapper">
+                <div class="page-header">
+                    <h2>Minhas Tarefas</h2>
+                    <button class="new-task-btn" id="new-task-btn">
+                        <i class="fas fa-plus"></i>
+                        Nova Tarefa
+                    </button>
+                </div>
+                
+                <div class="task-filter-section">
+                    <div class="period-selector">
+                        <label class="period-label">Filtrar por período:</label>
+                        <div class="period-options">
+                            <label class="period-option">
+                                <input type="radio" name="period-filter" value="all" checked>
+                                <span class="period-badge">Todos</span>
+                            </label>
+                            <label class="period-option">
+                                <input type="radio" name="period-filter" value="day">
+                                <span class="period-badge">Dia</span>
+                            </label>
+                            <label class="period-option">
+                                <input type="radio" name="period-filter" value="week">
+                                <span class="period-badge">Semana</span>
+                            </label>
+                            <label class="period-option">
+                                <input type="radio" name="period-filter" value="month">
+                                <span class="period-badge">Mês</span>
+                            </label>
+                            <label class="period-option">
+                                <input type="radio" name="period-filter" value="year">
+                                <span class="period-badge">Ano</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="status-filter">
+                        <label class="status-label">Filtrar por status:</label>
+                        <div class="status-options">
+                            <label class="status-option">
+                                <input type="radio" name="status-filter" value="all" checked>
+                                <span class="status-badge all">
+                                    <i class="fas fa-list"></i>
+                                    Todas
+                                </span>
+                            </label>
+                            <label class="status-option">
+                                <input type="radio" name="status-filter" value="pending">
+                                <span class="status-badge pending">
+                                    <i class="fas fa-clock"></i>
+                                    Em andamento
+                                </span>
+                            </label>
+                            <label class="status-option">
+                                <input type="radio" name="status-filter" value="completed">
+                                <span class="status-badge completed">
+                                    <i class="fas fa-check"></i>
+                                    Concluído
+                                </span>
+                            </label>
+                            <label class="status-option">
+                                <input type="radio" name="status-filter" value="finished">
+                                <span class="status-badge finished">
+                                    <i class="fas fa-flag-checkered"></i>
+                                    Finalizado
+                                </span>
+                            </label>
+                            <label class="status-option">
+                                <input type="radio" name="status-filter" value="late">
+                                <span class="status-badge late">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Em atraso
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="task-table-container">
+                    <table class="task-table">
+                        <thead>
+                            <tr>
+                                <th>Período</th>
+                                <th>Nome da Tarefa</th>
+                                <th>Data de Início</th>
+                                <th>Data Final</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-table-body">
+                            <!-- As tarefas serão renderizadas aqui dinamicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Container para mensagem quando não houver tarefas -->
+                <div id="no-tasks-message" class="no-tasks-message" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <p>Nenhuma tarefa encontrada</p>
+                </div>
+            </div>
+            
+            <!-- Calendar View -->
+            <div id="calendar-view" class="content-wrapper" style="display: none;">
+                <div class="page-header">
+                    <h2>Calendário de Tarefas</h2>
+                    <button class="new-task-btn" id="new-task-btn-calendar" onclick="prepareNewTask()">
+                        <i class="fas fa-plus"></i>
+                        Nova Tarefa
+                    </button>
+                </div>
+                
+                <div class="calendar-container" id="calendar-container">
+                    <!-- O calendário será renderizado dinamicamente aqui -->
+                </div>
+            </div>
+            
+            <!-- Análises View -->
+            <div id="analises-view" class="content-wrapper" style="display: none;">
+                <div class="page-header">
+                    <h2>Análise de Tarefas</h2>
+                    <button class="export-btn">
+                        <i class="fas fa-file-export"></i>
+                        Exportar Dados
+                    </button>
+                </div>
+                
+                <div class="analytics-container">
+                    <!-- Primeira linha - Resumo e Gráfico de Pizza -->
+                    <div class="analytics-row">
+                        <div class="analytics-card summary-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-tasks"></i> Resumo de Tarefas</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="summary-item">
+                                    <div class="summary-label">Total de Tarefas</div>
+                                    <div class="summary-value" id="total-tasks">34</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-label">Tarefas Concluídas</div>
+                                    <div class="summary-value" id="completed-tasks">56%</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-label">Tarefas Atrasadas</div>
+                                    <div class="summary-value" id="late-tasks">18%</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-label">Tempo Médio de Conclusão</div>
+                                    <div class="summary-value" id="average-time">2,5h</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-pie"></i> Distribuição de Tarefas</h3>
+                                <button class="view-details-btn">Ver Detalhes</button>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="tasks-distribution-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Segunda linha - Evolução e Distribuição por Dia -->
+                    <div class="analytics-row">
+                        <div class="analytics-card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-line"></i> Evolução de Tarefas Concluídas</h3>
+                                <button class="view-details-btn">Ver Detalhes</button>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="tasks-evolution-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-bar"></i> Tarefas por Dia da Semana</h3>
+                                <button class="view-details-btn">Ver Detalhes</button>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="tasks-by-day-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Terceira linha - Distribuição por Horário -->
+                    <div class="analytics-row">
+                        <div class="analytics-card chart-card full-width">
+                            <div class="card-header">
+                                <h3><i class="fas fa-clock"></i> Distribuição de Tarefas por Horário</h3>
+                                <button class="view-details-btn">Ver Detalhes</button>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="tasks-by-hour-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <!-- Modal de Comentários -->
+            <div class="comments-modal" id="comments-modal" style="display: none;">
+                <div class="comments-container">
+                    <div class="comments-header">
+                        <h3>Comentários</h3>
+                        <button type="button" class="close-comments-modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="comments-body">
+                        <div class="comments-list" id="comments-list">
+                            <!-- Comentários serão adicionados aqui dinamicamente -->
+                        </div>
+                        
+                        <form id="comment-form" class="comment-form">
+                            <input type="hidden" id="comment-task-id">
+                            <div class="comment-input-container">
+                                <input type="text" id="comment-input" placeholder="Adicionar um comentário..." required>
+                                <button type="submit" class="comment-submit-btn">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="supabase-config.js"></script>
+    <script src="calendar.js"></script>
+    <script src="analytics.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Controle do menu mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            // Função para alternar a exibição da barra lateral
+            function toggleSidebar() {
+                sidebar.classList.toggle('show-mobile');
+                overlay.classList.toggle('show');
+                document.body.classList.toggle('sidebar-open');
+            }
+            
+            // Adicionar evento de clique ao botão do menu
+            mobileMenuToggle.addEventListener('click', toggleSidebar);
+            
+            // Fechar menu ao clicar no overlay
+            overlay.addEventListener('click', toggleSidebar);
+            
+            // Fechar menu ao clicar em um link (em dispositivos móveis)
+            const sidebarLinks = sidebar.querySelectorAll('a');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('show-mobile');
+                        overlay.classList.remove('show');
+                        document.body.classList.remove('sidebar-open');
+                    }
+                });
+            });
+            
+            // Ajustar exibição com base na largura da tela
+            function handleResize() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('show-mobile');
+                    overlay.classList.remove('show');
+                    document.body.classList.remove('sidebar-open');
+                    mobileMenuToggle.style.display = 'none';
+                } else {
+                    mobileMenuToggle.style.display = 'flex';
+                }
+            }
+            
+            // Verificar tamanho da tela ao carregar e ao redimensionar
+            window.addEventListener('resize', handleResize);
+            handleResize();
+        });
+    </script>
+</body>
+</html> 
